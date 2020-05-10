@@ -1,17 +1,41 @@
 import { Router } from 'express';
-import { startOfHour, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 import AppointmentsRepository from '../repositories/AppointmentsRepository';
+import CreateAppointmentService from '../services/CreateAppointmentService';
 
 const appointmentsRouter = Router();
+
 const appointmentsRepository = new AppointmentsRepository();
 
+appointmentsRouter.get('/', (req, res) => {
+  const appointments = appointmentsRepository.all();
+  return res.status(200).json(appointments);
+});
+
 appointmentsRouter.post('/', (req, res) => {
-  const { provider, date } = req.body;
+  try {
+    const { provider, date } = req.body;
 
-  const parsedDate = startOfHour(parseISO(date));
+    /**
+     * Data Transformation does not go into the service.
+     * It says inside the route.
+     */
 
-  const appointment = appointmentsRepository.create(provider, parsedDate);
-  return res.json(appointment);
+    const parsedDateUTC = parseISO(date);
+
+    const createAppointmentService = new CreateAppointmentService(
+      appointmentsRepository,
+    );
+
+    const appointment = createAppointmentService.execute({
+      date: parsedDateUTC,
+      provider,
+    });
+
+    return res.json(appointment);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
 });
 
 export default appointmentsRouter;
