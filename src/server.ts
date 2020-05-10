@@ -3,7 +3,8 @@ import 'reflect-metadata';
 import express from 'express';
 import routes from './routes';
 
-import './database';
+// Remove comment to enable database using postgres and migrations
+// import './database';
 
 const app = express();
 
